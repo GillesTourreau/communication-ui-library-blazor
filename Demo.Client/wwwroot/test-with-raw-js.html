@@ -1,0 +1,73 @@
+﻿<html>
+<head>
+
+</head>
+<body>
+    <div id="container"></div>
+
+    <script>
+            var allMessages = [];
+
+            for (var i=0; i<1000; i++) {
+                allMessages.push({
+                    messageType: 'chat',
+                    senderId: 'user1',
+                    senderDisplayName: 'Gilles TOURREAU',
+                    messageId: Math.random().toString(),
+                    content: 'Hello' + i,
+                    createdOn: new Date('2010-04-13T00:00:00.000+08:10'),
+                    mine: true,
+                    attached: false,
+                    status: 'seen',
+                    contentType: 'html'
+                });
+            }
+
+            var intLastIndex = allMessages.length - 1;
+
+            async function onLoadPreviousChatMessages(numberOfMessagesToLoad, setMessages) {
+
+                if (intLastIndex <= 0) {
+                    console.log("no more messages to retrieve, stop it!");
+                    return Promise.resolve(true);
+                }
+
+                setMessages((prev) => {
+                    let newMessages = [];
+
+                    for (var i = numberOfMessagesToLoad; i > 0; i--, intLastIndex--) {
+                        newMessages.push(allMessages[allMessages.length - prev.length - i]);
+                    }
+
+                    return [...newMessages, ...prev];
+                });
+
+                console.log("more message to retrieve...");
+                return Promise.resolve(false);
+            }
+    </script>
+
+    <script type="module">
+        import * as commUI from "./communication-react.js";
+
+        var container = document.getElementById("container");
+
+        const messageThreadComponent = (props) => {
+            const [m, setMessages] = commUI.useState([]);
+
+            props.messages = m;
+            props.onLoadPreviousChatMessages = (count) => onLoadPreviousChatMessages(count, setMessages);
+
+            return commUI.createElement(commUI.MessageThread, props, null);
+        };
+
+        var args = {
+            userId: 'user1',
+            showMessageDate: true,
+            numberOfChatMessagesToReload: 5
+        };
+
+        commUI.createRoot(container).render(commUI.createElement(messageThreadComponent, { ...args }));
+    </script>
+</body>
+</html>
