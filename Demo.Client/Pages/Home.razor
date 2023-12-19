@@ -1,0 +1,55 @@
+﻿@page "/"
+
+@using PosInformatique.Azure.Communication.UI.Blazor
+
+<MessageThread UserId="user1" OnLoadPreviousChatMessages="this.OnLoadPreviousChatMessages">
+
+</MessageThread>
+
+@code {
+    private ChatMessage[] messages = InitializeMessages();
+
+    private static ChatMessage[] InitializeMessages()
+    {
+        var messages = new ChatMessage[100];
+
+        for (int i = 0; i < 100; i++)
+        {
+            var id = Guid.NewGuid().ToString();
+            var createdOn = DateTime.UtcNow.AddHours(-i);
+            var contentType = MessageContentType.Html;
+
+            var message = new ChatMessage(id, createdOn, contentType)
+                {
+                    Content = $"Message {i + 1}",
+                    SenderId = $"SenderID{i + 1}",
+                    SenderDisplayName = $"SenderDisplayName {i + 1}",
+                    Mine = i % 2 == 0,
+                    Status = MessageStatus.Seen,
+                };
+
+            messages[i] = message;
+        }
+
+        return messages;
+    }
+
+    public async Task OnLoadPreviousChatMessages(LoadPreviousChatMessagesEvent e)
+    {
+        foreach (var message in messages.Skip(e.StartIndex).Take(e.EndIndex - e.StartIndex))
+        {
+            e.Messages.Add(message);
+        }
+
+        if (e.EndIndex >= messages.Length)
+        {
+            e.HasMoreMessages = true;
+        }
+        else
+        {
+            e.HasMoreMessages = false;
+        }
+
+        await Task.CompletedTask;
+    }
+}
